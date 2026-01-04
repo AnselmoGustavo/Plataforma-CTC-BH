@@ -4,9 +4,9 @@ export interface EventRecord {
   id: string;
   title: string;
   description: string;
-  event_date: string;
-  event_time: string;
+  start_date: string;
   location: string;
+  created_by: number;
   created_at: string;
   updated_at: string;
 }
@@ -14,16 +14,16 @@ export interface EventRecord {
 export interface EventDto {
   title: string;
   description: string;
-  event_date: string;
-  event_time: string;
+  start_date: string;
   location: string;
+  created_by: number;
 }
 
 export async function listEvents(): Promise<EventRecord[]> {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .order('event_date', { ascending: false });
+    .order('start_date', { ascending: false });
   
   if (error) throw error;
   return (data as EventRecord[]) || [];
