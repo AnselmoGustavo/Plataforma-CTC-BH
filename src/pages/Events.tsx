@@ -104,7 +104,6 @@ const Events = () => {
     const payload: EventDto = {
       title: formData.title,
       start_date: eventDate.toISOString(),
-      end_date: eventDate.toISOString(),
       location: formData.location,
       description: formData.description,
     };
@@ -184,14 +183,13 @@ const Events = () => {
     const tableData = filteredEvents.map((e) => [
       e.title,
       e.start_date ? format(new Date(e.start_date), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
-      e.end_date ? format(new Date(e.end_date), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
       e.location || "-",
       (e.description || "").substring(0, 30) + ((e.description || "").length > 30 ? "..." : ""),
     ]);
 
     autoTable(doc, {
       startY: yPos,
-      head: [["Evento", "Início", "Término", "Local", "Descrição"]],
+      head: [["Evento", "Início", "Local", "Descrição"]],
       body: tableData,
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
@@ -465,29 +463,14 @@ const Events = () => {
                               <h3 className="text-xl font-semibold">
                                 {event.title}
                               </h3>
-                              {event.status === "cancelled" && (
-                                <span className="text-xs bg-red-200 text-red-700 px-2 py-1 rounded">
-                                  Cancelado
-                                </span>
-                              )}
-                              {event.status === "completed" && (
-                                <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
-                                  Concluído
-                                </span>
-                              )}
-                              {event.status === "ongoing" && (
-                                <span className="text-xs bg-yellow-200 text-yellow-700 px-2 py-1 rounded">
-                                  Em Andamento
-                                </span>
-                              )}
-                              {event.status === "scheduled" && !isPast && (
-                                <span className="text-xs bg-green-200 text-green-700 px-2 py-1 rounded">
-                                  Agendado
-                                </span>
-                              )}
-                              {isPast && event.status === "scheduled" && (
+                              {isPast && (
                                 <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
                                   Passado
+                                </span>
+                              )}
+                              {!isPast && (
+                                <span className="text-xs bg-green-200 text-green-700 px-2 py-1 rounded">
+                                  Próximo
                                 </span>
                               )}
                             </div>
@@ -502,20 +485,7 @@ const Events = () => {
                                     )
                                   : "Data não informada"}
                               </p>
-                              <p>
-                                🏁 Término:{" "}
-                                {event.end_date
-                                  ? format(
-                                      new Date(event.end_date),
-                                      "dd/MM/yyyy 'às' HH:mm",
-                                      { locale: ptBR }
-                                    )
-                                  : "Data não informada"}
-                              </p>
                               <p>📍 {event.location || "Local não informado"}</p>
-                              {event.capacity && (
-                                <p>👥 Capacidade: {event.capacity} pessoas</p>
-                              )}
                               {event.description && (
                                 <p className="mt-2">
                                   <strong>📋 Descrição: </strong>
