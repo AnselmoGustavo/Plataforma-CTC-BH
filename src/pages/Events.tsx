@@ -72,7 +72,7 @@ const Events = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: EventDto }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: EventDto }) =>
       updateEvent(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -122,7 +122,7 @@ const Events = () => {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este evento?")) return;
     deleteMutation.mutate(id);
   };
