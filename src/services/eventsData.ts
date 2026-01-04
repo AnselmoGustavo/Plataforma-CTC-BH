@@ -26,7 +26,7 @@ export async function listEvents(): Promise<EventRecord[]> {
     .order('start_date', { ascending: false });
   
   if (error) throw error;
-  return (data as EventRecord[]) || [];
+  return (data as unknown as EventRecord[]) || [];
 }
 
 export async function getEventById(id: string): Promise<EventRecord> {
@@ -37,14 +37,14 @@ export async function getEventById(id: string): Promise<EventRecord> {
     .single();
   
   if (error) throw error;
-  return data as EventRecord;
+  return data as unknown as EventRecord;
 }
 
 export async function createEvent(payload: EventDto): Promise<EventRecord> {
   console.log("Criando evento com payload:", payload);
   const { data, error } = await supabase
     .from('events')
-    .insert([payload])
+    .insert([payload as unknown as any])
     .select()
     .single();
   
@@ -52,7 +52,7 @@ export async function createEvent(payload: EventDto): Promise<EventRecord> {
     console.error("Erro ao criar evento:", error);
     throw error;
   }
-  return data as EventRecord;
+  return data as unknown as EventRecord;
 }
 
 export async function updateEvent(id: string, payload: Partial<EventDto>) {
