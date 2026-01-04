@@ -23,17 +23,17 @@ export async function listEvents(): Promise<EventRecord[]> {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .order('start_date', { ascending: false });
+    .order('event_date', { ascending: false });
   
   if (error) throw error;
   return (data as EventRecord[]) || [];
 }
 
-export async function getEventById(id: number): Promise<EventRecord> {
+export async function getEventById(id: string): Promise<EventRecord> {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .eq('id', id.toString())
+    .eq('id', id)
     .single();
   
   if (error) throw error;
@@ -51,20 +51,20 @@ export async function createEvent(payload: EventDto): Promise<EventRecord> {
   return data as EventRecord;
 }
 
-export async function updateEvent(id: number, payload: Partial<EventDto>) {
+export async function updateEvent(id: string, payload: Partial<EventDto>) {
   const { error } = await supabase
     .from('events')
     .update(payload)
-    .eq('id', id.toString());
+    .eq('id', id);
   
   if (error) throw error;
 }
 
-export async function deleteEvent(id: number) {
+export async function deleteEvent(id: string) {
   const { error } = await supabase
     .from('events')
     .delete()
-    .eq('id', id.toString());
+    .eq('id', id);
   
   if (error) throw error;
 }
