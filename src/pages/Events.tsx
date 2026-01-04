@@ -66,8 +66,9 @@ const Events = () => {
       toast.success("Evento criado com sucesso!");
       resetForm();
     },
-    onError: () => {
-      toast.error("Erro ao criar evento");
+    onError: (error: any) => {
+      console.error("Erro ao criar evento:", error);
+      toast.error(`Erro ao criar evento: ${error?.message || "Erro desconhecido"}`);
     },
   });
 

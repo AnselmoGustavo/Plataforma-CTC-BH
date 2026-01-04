@@ -41,13 +41,17 @@ export async function getEventById(id: string): Promise<EventRecord> {
 }
 
 export async function createEvent(payload: EventDto): Promise<EventRecord> {
+  console.log("Criando evento com payload:", payload);
   const { data, error } = await supabase
     .from('events')
     .insert([payload])
     .select()
     .single();
   
-  if (error) throw error;
+  if (error) {
+    console.error("Erro ao criar evento:", error);
+    throw error;
+  }
   return data as EventRecord;
 }
 
