@@ -5,11 +5,8 @@ export interface EventRecord {
   title: string;
   description?: string;
   start_date: string;
-  end_date: string;
   location?: string;
-  status?: string;
-  capacity?: number;
-  created_by?: number;
+  created_by: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -18,10 +15,8 @@ export interface EventDto {
   title: string;
   description?: string;
   start_date: string;
-  end_date: string;
   location?: string;
-  status?: string;
-  capacity?: number;
+  created_by: number;
 }
 
 export async function listEvents(): Promise<EventRecord[]> {

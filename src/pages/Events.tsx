@@ -14,6 +14,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { addPDFHeader, addPDFFooter } from "@/lib/pdfUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   listEvents,
   createEvent,
@@ -25,6 +26,7 @@ import {
 
 const Events = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventRecord | null>(null);
   const [filterYear, setFilterYear] = useState<string>("");
@@ -97,6 +99,11 @@ const Events = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!user?.id) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
     // Combinar data e hora para criar start_date
     const startDateTime = `${formData.event_date}T${formData.event_time}`;
     const eventDate = new Date(startDateTime);
@@ -106,6 +113,7 @@ const Events = () => {
       start_date: eventDate.toISOString(),
       location: formData.location,
       description: formData.description,
+      created_by: parseInt(user.id),
     };
 
     if (editingEvent) {
@@ -233,7 +241,7 @@ const Events = () => {
   
   // Extrair anos únicos dos eventos e ordenar em ordem decrescente
   const years = useMemo(() => {
-    const yearsSet = new Set(events.map(e => new Date(e.event_date).getFullYear()));
+    const yearsSet = new Set(events.map(e => new Date(e.start_date).getFullYear()));
     return Array.from(yearsSet).sort((a, b) => b - a);
   }, [events]);
   const months = [
