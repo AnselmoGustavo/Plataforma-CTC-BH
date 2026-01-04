@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Environment variables with credentials
+.env
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -41,3 +46,13 @@ obj/
 
 # EF Migrations generated files (optional)
 Migrations/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
