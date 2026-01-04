@@ -104,16 +104,12 @@ const Events = () => {
       return;
     }
 
-    // Combinar data e hora para criar start_date
-    const startDateTime = `${formData.event_date}T${formData.event_time}`;
-    const eventDate = new Date(startDateTime);
-
     const payload: EventDto = {
       title: formData.title,
-      start_date: eventDate.toISOString(),
+      event_date: formData.event_date,
+      event_time: formData.event_time,
       location: formData.location,
       description: formData.description,
-      created_by: parseInt(user.id),
     };
 
     if (editingEvent) {
@@ -134,15 +130,10 @@ const Events = () => {
   const handleEdit = (event: EventRecord) => {
     setEditingEvent(event);
 
-    // Separar data e hora do start_date
-    const startDate = new Date(event.start_date);
-    const dateStr = startDate.toISOString().split('T')[0];
-    const timeStr = startDate.toTimeString().slice(0, 5);
-
     setFormData({
       title: event.title,
-      event_date: dateStr,
-      event_time: timeStr,
+      event_date: event.event_date,
+      event_time: event.event_time,
       location: event.location || "Rua dos Guaranis, 597 - Centro, Belo Horizonte - MG, 30120-040",
       description: event.description || "",
     });
@@ -152,9 +143,9 @@ const Events = () => {
   // Filtros
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
-      if (!event.start_date) return false;
+      if (!event.event_date) return false;
       
-      const eventDate = new Date(event.start_date);
+      const eventDate = new Date(`${event.event_date}T${event.event_time}`);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -190,7 +181,7 @@ const Events = () => {
 
     const tableData = filteredEvents.map((e) => [
       e.title,
-      e.start_date ? format(new Date(e.start_date), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
+      e.event_date ? format(new Date(`${e.event_date}T${e.event_time}`), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
       e.location || "-",
       (e.description || "").substring(0, 30) + ((e.description || "").length > 30 ? "..." : ""),
     ]);
@@ -241,7 +232,7 @@ const Events = () => {
   
   // Extrair anos únicos dos eventos e ordenar em ordem decrescente
   const years = useMemo(() => {
-    const yearsSet = new Set(events.map(e => new Date(e.start_date).getFullYear()));
+    const yearsSet = new Set(events.map(e => new Date(`${e.event_date}T${e.event_time}`).getFullYear()));
     return Array.from(yearsSet).sort((a, b) => b - a);
   }, [events]);
   const months = [
@@ -457,7 +448,7 @@ const Events = () => {
                 </p>
               ) : (
                 filteredEvents.map((event) => {
-                  const eventStartDate = new Date(event.start_date);
+                  const eventStartDate = new Date(`${event.event_date}T${event.event_time}`);
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
                   const isPast = eventStartDate < today;
@@ -485,9 +476,9 @@ const Events = () => {
                             <div className="space-y-1 text-muted-foreground">
                               <p>
                                 📅 Início:{" "}
-                                {event.start_date
+                                {event.event_date
                                   ? format(
-                                      new Date(event.start_date),
+                                      new Date(`${event.event_date}T${event.event_time}`),
                                       "dd/MM/yyyy 'às' HH:mm",
                                       { locale: ptBR }
                                     )

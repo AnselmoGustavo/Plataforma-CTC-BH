@@ -1,22 +1,22 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EventRecord {
-  id: number;
+  id: string;
   title: string;
-  description?: string;
-  start_date: string;
-  location?: string;
-  created_by: number;
-  created_at?: string;
-  updated_at?: string;
+  description: string;
+  event_date: string;
+  event_time: string;
+  location: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface EventDto {
   title: string;
-  description?: string;
-  start_date: string;
-  location?: string;
-  created_by: number;
+  description: string;
+  event_date: string;
+  event_time: string;
+  location: string;
 }
 
 export async function listEvents(): Promise<EventRecord[]> {
@@ -33,7 +33,7 @@ export async function getEventById(id: number): Promise<EventRecord> {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .eq('id', id)
+    .eq('id', id.toString())
     .single();
   
   if (error) throw error;
@@ -55,7 +55,7 @@ export async function updateEvent(id: number, payload: Partial<EventDto>) {
   const { error } = await supabase
     .from('events')
     .update(payload)
-    .eq('id', id);
+    .eq('id', id.toString());
   
   if (error) throw error;
 }
@@ -64,7 +64,7 @@ export async function deleteEvent(id: number) {
   const { error } = await supabase
     .from('events')
     .delete()
-    .eq('id', id);
+    .eq('id', id.toString());
   
   if (error) throw error;
 }
