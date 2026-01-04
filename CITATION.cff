@@ -1,0 +1,27 @@
+cff-version: 1.0.1
+message: Sistema para Gestão do Círculo de Trabalhadores Cristãos BH
+title: CTC Team
+authors:
+  - family-names: Silva
+    given-names: Gustavo
+  - family-names: Viana 
+    given-names: Ana 
+  - family-names: Souza
+    given-names: Grazielle
+  - family-names: Almeida
+    given-names: Karina   
+  - family-names: Marques
+    given-names: Nicole   
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: Alves de Oliveira
+    given-names: Pedro
+keywords:
+  - trabalhadores
+  - administrativo
+  - eventos
+  - organização
+repository-code: https://github.com/ICEI-PUCMinas-PSG-SI-TI/psg-si-2025-2-p5-tias-7679101-ctc-team.git
+license: CC-BY-4.0
+version: 1.0.0
+date-released: 2022-12-15

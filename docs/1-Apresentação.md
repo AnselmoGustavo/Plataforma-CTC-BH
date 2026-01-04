@@ -1,0 +1,22 @@
+# 1 Apresentação
+
+
+As Organizações da Sociedade Civil (OSC) são entidades sem fins lucrativos que desempenham um papel essencial na estrutura social, atuando onde o setor privado e o governo muitas vezes não alcançam. Essas organizações promovem ações em áreas como assistência social, saúde, educação e defesa dos direitos humanos, contribuindo diretamente para o bem-estar coletivo. Seus recursos, em grande parte, provêm de subvenções governamentais, além de doações realizadas por pessoas físicas e jurídicas (SEBRAE, 2022)
+
+## 1.1 Cliente
+O Círculo de Trabalhadores Cristãos de Belo Horizonte (CTC), denominado cliente ou parceiro, é uma OSC sem fins lucrativos que promove atividades com o objetivo de atuar em causas de caráter social. A instituição realiza ações como bazares, eventos gastronômicos, aluguel de lojas para afiliados, entre outras iniciativas destinadas a arrecadar fundos. Esses recursos são revertidos em eventos culturais e de lazer para a população atendida, garantindo o acesso a um dos direitos sociais fundamentais, que possibilitam o desenvolvimento pessoal e coletivo.
+Entre as atividades realizadas em parceria com outras associações, destacam-se sessões de cinema, aulas de dança, apresentações artísticas e o projeto Academia da Cidade. O público-alvo principal é formado por pessoas em situação de vulnerabilidade social, mas atualmente a instituição atende também a uma diversidade maior da população local, de diferentes perfis socioeconômicos, com ou sem acesso a meios tecnológicos.
+
+## 1.2 Problema
+O Círculo de Trabalhadores Cristãos de Belo Horizonte (CTC), relata que todo o cotidiano da OSC é planejado, utilizando cadernos, documentos escritos, planilhas simples, bem como utilização de mensagens via whatsapp ou instagram. Também relatam que não possuem tanta visibilidade quanto gostariam, apesar de desenvolverem várias ações interessantes, as pessoas precisam ir presencialmente para se inteirar de tudo que acontece no círculo. Problemas como coleta de assinaturas de reuniões, organização de salas para projetos que atuam dentro dos espaços do círculo, dificuldade em cálculos para relatórios mensais, falta de um sistema mais otimizado para organização, planejamento, movimentações financeiras, divulgação de atividades, controle de pessoas que participam dos eventos e um melhor controle dos atendimentos e locatários.  
+
+## 1.3 Objetivo do trabalho
+Nosso objetivo é atuar em cima dos principais problemas relatados, site de divulgação e organização da OSC. A ideia é desenvolver um sistema web que auxiliará na divulgação dos trabalhos feitos pela OSC, bem como dos principais eventos, montando uma home page que ajude nessa divulgação, com imagens, textos, calendário de eventos. Outras funções da plataforma atuariam no auxílio organizacional, um sistema para cálculos de movimentações financeiras que gere um relatório final pronto para envio, sistema de auxílio para definição de locatários, organização de espaço e horários para os diferentes eventos/organizações que utilizam do espaço do círculo. Todo o sistema, tem como foco principal, auxiliar o CTC BH nas principais atividades do cotidiano e na divulgação de todo o cronograma.
+
+## 1.4 Definições e Abreviaturas
+A seguir, são apresentadas as definições, siglas e abreviações utilizadas neste documento e no desenvolvimento do projeto, com o objetivo de garantir a clareza e o pleno entendimento das informações técnicas e institucionais.
+1. CTC – Centro dos Trabalhadores Cristãos de Belo Horizonte: Organização responsável pela iniciativa do projeto, voltada para ações sociais, educacionais e de apoio à comunidade.
+2. ODS – Objetivos de Desenvolvimento Sustentável: Conjunto de metas globais estabelecidas pela ONU para promover o desenvolvimento sustentável em diversas áreas, como erradicação da pobreza, educação de qualidade e igualdade de gênero.
+3. OSC – Organização da Sociedade Civil: Instituições privadas sem fins lucrativos que atuam em diversas áreas do interesse público, como assistência social, educação e meio ambiente.
+4. ONG – Organização Não Governamental: Entidade do terceiro setor, sem fins lucrativos e independente do governo, que atua em causas sociais, ambientais, educacionais, entre outras.
+5. Modelo C4 – Modelo de Arquitetura de Software em 4 Níveis: Abordagem de modelagem visual que descreve a arquitetura de sistemas de software em quatro níveis: Contexto, Contêiner, Componente e Código. Ajuda na comunicação clara entre equipes técnicas e não técnicas.
