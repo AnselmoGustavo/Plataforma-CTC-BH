@@ -31,26 +31,26 @@ const Associates = () => {
   const [editingAssociate, setEditingAssociate] = useState<AssociadoRecord | null>(null);
 
   const [formData, setFormData] = useState({
-    name: "",
+    nome: "",
     email: "",
-    date_of_birth: "",
-    membership_date: "",
-    role: "",
-    phoneNumber: "",
-    monthly_fee: null, 
-    active: true,
+    telefone: "",
+    endereco: "",
+    data_nascimento: "",
+    funcao: "",
+    mensalidade: "",
+    status: "ativo",
   });
 
   const resetForm = () => {
   setFormData({
-    name: "",
+    nome: "",
     email: "",
-    date_of_birth: "",
-    membership_date: "",
-    role: "",
-    phoneNumber: "",
-    monthly_fee: null,
-    active: true,
+    telefone: "",
+    endereco: "",
+    data_nascimento: "",
+    funcao: "",
+    mensalidade: "",
+    status: "ativo",
   });
   setEditingAssociate(null);
   setShowForm(false);
@@ -63,16 +63,24 @@ const Associates = () => {
   });
 
   const createMutation = useMutation({
-  mutationFn: (payload: AssociadoDto) => createAssociado(payload),
-  onSuccess: () => {
+  mutationFn: (payload: AssociadoDto) => {
+    console.log("🚀 Enviando para Supabase:", payload);
+    return createAssociado(payload);
+  },
+  onSuccess: (data) => {
+    console.log("✅ Sucesso! Dados retornados:", data);
     queryClient.invalidateQueries({ queryKey: ["associados"] });
     toast.success("Associado criado com sucesso!");
     resetForm();
-    },
+  },
+  onError: (error: any) => {
+    console.error("❌ Erro ao criar:", error);
+    toast.error(error?.message || "Erro ao criar associado");
+  },
   });
 
   const updateMutation = useMutation({
-  mutationFn: ({ id, payload }: { id: string; payload: AssociadoDto }) =>
+  mutationFn: ({ id, payload }: { id: number; payload: AssociadoDto }) =>
     updateAssociado(id, payload),
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["associados"] });
@@ -94,8 +102,11 @@ const Associates = () => {
   const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault();
 
+  console.log("🔵 handleSubmit chamado");
+  console.log("📝 formData:", formData);
+
   // Validações
-  if (!formData.name.trim()) {
+  if (!formData.nome.trim()) {
     toast.error("Nome é obrigatório");
     return;
   }
@@ -105,61 +116,53 @@ const Associates = () => {
     return;
   }
 
-  if (formData.phoneNumber && !isValidPhoneNumber(formData.phoneNumber.replace(/\D/g, ""))) {
+  if (formData.telefone && !isValidPhoneNumber(formData.telefone.replace(/\D/g, ""))) {
     toast.error("Telefone deve ter 11 dígitos (XX) XXXXX-XXXX");
     return;
   }
 
-  if (!formData.monthly_fee || formData.monthly_fee <= 0) {
-    toast.error("Taxa mensal deve ser maior que 0");
-    return;
-  }
-
   const payload: AssociadoDto = {
-    name: formData.name,
+    nome: formData.nome,
     email: formData.email,
-    date_of_birth: formData.date_of_birth,
-    membership_date: formData.membership_date,
-    role: formData.role,
-    phoneNumber: formData.phoneNumber,
-    monthly_fee: formData.monthly_fee!,
-    active: formData.active,
+    telefone: formData.telefone,
+    endereco: formData.endereco,
+    data_nascimento: formData.data_nascimento,
+    funcao: formData.funcao,
+    mensalidade: formData.mensalidade ? Number(formData.mensalidade) : undefined,
+    status: formData.status,
   };
 
+  console.log("📦 payload:", payload);
+
   if (editingAssociate) {
+    console.log("✏️ Editando associado:", editingAssociate.id);
     updateMutation.mutate({
       id: editingAssociate.id,
       payload,
     });
   } else {
+    console.log("➕ Criando novo associado");
     createMutation.mutate(payload);
   }
 };
 
-const handleDelete = (id: string) => {
+const handleDelete = (id: number) => {
   if (!confirm("Tem certeza que deseja excluir este associado?")) return;
   deleteMutation.mutate(id);
 };
 
 const handleEdit = (associate: AssociadoRecord) => {
   setEditingAssociate(associate);
-  
-  // Converter datas ISO para formato YYYY-MM-DD para o input type="date"
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
-  };
 
   setFormData({
-    name: associate.name,
+    nome: associate.nome,
+    data_nascimento: associate.data_nascimento || "",
+    funcao: associate.funcao || "",
+    mensalidade: associate.mensalidade?.toString() || "",
     email: associate.email,
-    date_of_birth: formatDateForInput(associate.date_of_birth),
-    membership_date: formatDateForInput(associate.membership_date),
-    role: associate.role,
-    phoneNumber: associate.phoneNumber,
-    monthly_fee: associate.monthly_fee,
-    active: associate.active,
+    telefone: associate.telefone || "",
+    endereco: associate.endereco || "",
+    status: associate.status || "ativo",
   });
   setShowForm(true);
 };
@@ -169,17 +172,17 @@ const generatePDFContent = (doc: jsPDF) => {
   yPos += 10;
 
   const tableData = associates.map((a) => [
-    a.name,
+    a.nome,
     a.email,
-    a.phoneNumber,
-    new Date(a.date_of_birth).toLocaleDateString("pt-BR"),
-    a.role,
-    a.active ? "Ativo" : "Inativo",
+    a.telefone || "-",
+    a.funcao || "-",
+    a.mensalidade ? `R$ ${Number(a.mensalidade).toFixed(2)}` : "-",
+    a.status === "ativo" ? "Ativo" : "Inativo",
   ]);
 
   autoTable(doc, {
     startY: yPos,
-    head: [["Nome", "Email", "Telefone", "Nascimento", "Função", "Status"]],
+    head: [["Nome", "Email", "Telefone", "Função", "Mensalidade", "Status"]],
     body: tableData,
     styles: { fontSize: 9, cellPadding: 2 },
     headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
@@ -260,11 +263,11 @@ const generatePDF = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo</Label>
+                      <Label htmlFor="nome">Nome Completo</Label>
                       <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        id="nome"
+                        value={formData.nome}
+                        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                         required
                       />
                     </div>
@@ -282,92 +285,81 @@ const generatePDF = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="date_of_birth">Data de Nascimento</Label>
+                      <Label htmlFor="data_nascimento">Data de Nascimento</Label>
                       <Input
-                        id="date_of_birth"
+                        id="data_nascimento"
                         type="date"
-                        value={formData.date_of_birth}
-                        onChange={(e) =>
-                          setFormData({ ...formData, date_of_birth: e.target.value })
-                        }
-                        required
+                        value={formData.data_nascimento}
+                        onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
                       />
                     </div>
 
-                    
                     <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Telefone</Label>
+                      <Label htmlFor="telefone">Telefone</Label>
                       <MaskedInput
-                        id="phoneNumber"
+                        id="telefone"
                         mask="phone"
-                        value={formData.phoneNumber}
+                        value={formData.telefone}
                         onChange={(e) =>
-                          setFormData({ ...formData, phoneNumber: e.target.value })
+                          setFormData({ ...formData, telefone: e.target.value })
                         }
                         placeholder="(11) 99999-9999"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="membership_date">Data de Associação</Label>
+                      <Label htmlFor="endereco">Endereço</Label>
                       <Input
-                        id="membership_date"
-                        type="date"
-                        value={formData.membership_date}
+                        id="endereco"
+                        value={formData.endereco}
                         onChange={(e) =>
-                          setFormData({ ...formData, membership_date: e.target.value })
+                          setFormData({ ...formData, endereco: e.target.value })
                         }
-                        required
+                        placeholder="Rua, número, bairro"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="monthly_fee">Mensalidade (R$)</Label>
+                      <Label htmlFor="funcao">Função na Associação</Label>
                       <Input
-                        id="monthly_fee"
+                        id="funcao"
+                        value={formData.funcao}
+                        onChange={(e) => setFormData({ ...formData, funcao: e.target.value })}
+                        placeholder="Ex: Membro, Coordenador"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="mensalidade">Mensalidade (R$)</Label>
+                      <Input
+                        id="mensalidade"
                         type="number"
                         step="0.01"
                         min="0"
-                        value={formData.monthly_fee || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, monthly_fee: e.target.value ? Number(e.target.value) : null })
-                        }
+                        value={formData.mensalidade}
+                        onChange={(e) => setFormData({ ...formData, mensalidade: e.target.value })}
                         placeholder="0,00"
-                        required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="role">Função na Associação</Label>
-                      <Input
-                        id="role"
-                        value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                        required
-                      />
-                    </div>
-
-                    {editingAssociate && (
-                                          <div className="space-y-2">
-                      <Label htmlFor="active">Status</Label>
+                      <Label htmlFor="status">Status</Label>
                       <select
-                        id="active"
+                        id="status"
                         className="border rounded p-2 w-full"
-                        value={formData.active ? "true" : "false"}
+                        value={formData.status}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            active: e.target.value === "true", 
+                            status: e.target.value, 
                           })
                         }
                         required
                       >
-                        <option value="true">Ativo</option>
-                        <option value="false">Inativo</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
                       </select>
                     </div>
-                  
-                  )}
                   </div>
 
                   <div className="flex gap-2">
@@ -397,31 +389,28 @@ const generatePDF = () => {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <h3 className="text-xl font-semibold mb-2">
-                            {associate.name}
+                            {associate.nome}
                           </h3>
 
                           <div className="space-y-1 text-muted-foreground">
                             <p>📧 {associate.email}</p>
-
+                            <p>📞 {associate.telefone || "Não informado"}</p>
+                            <p>📍 {associate.endereco || "Não informado"}</p>
+                            {associate.data_nascimento && (
+                              <p>
+                                🎂 {format(new Date(associate.data_nascimento), "dd/MM/yyyy", { locale: ptBR })}
+                                {" "}({calculateAge(associate.data_nascimento)} anos)
+                              </p>
+                            )}
                             <p>
-                              🎂{" "}
-                              {format(new Date(associate.date_of_birth), "dd/MM/yyyy", {
+                              📅 Cadastrado em{" "}
+                              {associate.data_associacao ? format(new Date(associate.data_associacao), "dd/MM/yyyy", {
                                 locale: ptBR,
-                              })}{" "}
-                              ({calculateAge(associate.date_of_birth)} anos)
+                              }) : "Não informado"}
                             </p>
-
-                            <p>
-                              📅 Associado desde{" "}
-                              {format(new Date(associate.membership_date), "dd/MM/yyyy", {
-                                locale: ptBR,
-                              })}
-                            </p>
-
-                            <p>💼 {associate.role}</p>
-                            <p>📞 {associate.phoneNumber}</p>
-                            <p>💸 {Number(associate.monthly_fee).toFixed(2)}</p>
-                            <p>{associate.active ? "🟢 Ativo" : "🔴 Inativo"}</p>
+                            {associate.funcao && <p>💼 {associate.funcao}</p>}
+                            {associate.mensalidade && <p>💸 R$ {Number(associate.mensalidade).toFixed(2)}</p>}
+                            <p>{associate.status === "ativo" ? "🟢 Ativo" : "🔴 Inativo"}</p>
                           </div>
                         </div>
 

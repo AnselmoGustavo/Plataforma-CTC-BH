@@ -75,41 +75,41 @@ export const RentalMenagement = () => {
         vehicleType: undefined,
       });
       const mapped: PartnerSpot[] = data.map((v: VeiculoLocacao) => {
-        // Detectar se é sala ou vaga baseado no formato do numeroVaga
-        const isSala = v.numeroVaga?.startsWith("SALA:");
+        // Detectar se é sala ou vaga verificando se tem roomname
+        const isSala = !!v.roomname;
         
         if (isSala) {
           return {
             id: v.id,
             rental_type: "sala",
-            partner_name: v.nomeParceiro,
-            space: v.espaco,
-            entry_date: v.dataEntrada.substring(0, 10),
-            exit_date: v.dataSaida ? v.dataSaida.substring(0, 10) : "",
-            room_name: v.numeroVaga.replace("SALA:", ""),
-            responsible: v.tipoVeiculo?.replace("RESP:", "") || "",
-            purpose: v.modelo || "",
-            description: v.placa !== "Sala" ? v.placa : "",
+            partner_name: v.nomeparceiro,
+            space: v.espaco || "",
+            entry_date: v.dataentrada?.substring(0, 10) || "",
+            exit_date: v.datasaida ? v.datasaida.substring(0, 10) : "",
+            room_name: v.roomname || "",
+            responsible: v.responsible || "",
+            purpose: v.purpose || "",
+            description: v.description || "",
           };
         } else {
           return {
             id: v.id,
             rental_type: "vaga",
-            partner_name: v.nomeParceiro,
-            space: v.espaco,
-            entry_date: v.dataEntrada.substring(0, 10),
-            exit_date: v.dataSaida ? v.dataSaida.substring(0, 10) : "",
-            spot_number: v.numeroVaga,
-            vehicle_type: v.tipoVeiculo,
-            model: v.modelo,
-            plate: v.placa,
+            partner_name: v.nomeparceiro,
+            space: v.espaco || "",
+            entry_date: v.dataentrada?.substring(0, 10) || "",
+            exit_date: v.datasaida ? v.datasaida.substring(0, 10) : "",
+            spot_number: v.numerovaga || "",
+            vehicle_type: v.tipoveiculo || "",
+            model: v.modelo || "",
+            plate: v.placa || "",
           };
         }
       });
       setPartners(mapped);
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao carregar veículos");
+      toast.error("Erro ao carregar registros");
     }
   };
 
@@ -177,26 +177,26 @@ export const RentalMenagement = () => {
       
       if (formData.rental_type === "vaga") {
         payload = {
-          nomeParceiro: formData.partner_name,
+          nomeparceiro: formData.partner_name,
           espaco: formData.space,
-          dataEntrada: formData.entry_date,
-          dataSaida: formData.exit_date || null,
-          numeroVaga: formData.spot_number,
-          tipoVeiculo: formData.vehicle_type,
+          dataentrada: formData.entry_date,
+          datasaida: formData.exit_date || null,
+          numerovaga: formData.spot_number,
+          tipoveiculo: formData.vehicle_type,
           modelo: formData.model,
           placa: formData.plate,
         };
       } else {
         // Para salas, usamos campos de forma diferente
         payload = {
-          nomeParceiro: formData.partner_name,
+          nomeparceiro: formData.partner_name,
           espaco: formData.space,
-          dataEntrada: formData.entry_date,
-          dataSaida: formData.exit_date || null,
-          numeroVaga: `SALA:${formData.room_name}`, // Marca como sala
-          tipoVeiculo: `RESP:${formData.responsible}`, // Armazena responsável
-          modelo: formData.purpose, // Armazena finalidade
-          placa: formData.description || "Sala", // Armazena descrição
+          dataentrada: formData.entry_date,
+          datasaida: formData.exit_date || null,
+          roomname: formData.room_name,
+          responsible: formData.responsible,
+          purpose: formData.purpose,
+          description: formData.description,
         };
       }
 

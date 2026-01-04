@@ -31,16 +31,18 @@ const Volunteers = () => {
   const [editingVolunteer, setEditingVolunteer] = useState<VoluntarioRecord | null>(null);
 
   
-  const { data: volunteers = [], isLoading } = useQuery({
+  const { data: volunteers = [], isLoading } = useQuery<VoluntarioRecord[]>({
     queryKey: ["voluntarios"],
     queryFn: listVoluntarios,
   });
 
   const [formData, setFormData] = useState({
-    name: "",
+    nome: "",
     email: "",
-    date_of_birth: "",
-    phoneNumber: ""
+    telefone: "",
+    especialidade: "",
+    endereco: "",
+    status: "ativo",
   });
 
   //mutations
@@ -54,7 +56,7 @@ const Volunteers = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: VoluntarioDto }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: VoluntarioDto }) =>
       updateVoluntario(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voluntarios"] });
@@ -76,7 +78,7 @@ const Volunteers = () => {
     e.preventDefault();
 
     // Validações
-    if (!formData.name.trim()) {
+    if (!formData.nome.trim()) {
       toast.error("Nome é obrigatório");
       return;
     }
@@ -86,16 +88,18 @@ const Volunteers = () => {
       return;
     }
 
-    if (formData.phoneNumber && !isValidPhoneNumber(formData.phoneNumber.replace(/\D/g, ""))) {
+    if (formData.telefone && !isValidPhoneNumber(formData.telefone.replace(/\D/g, ""))) {
       toast.error("Telefone deve ter 11 dígitos (XX) XXXXX-XXXX");
       return;
     }
 
     const payload: VoluntarioDto = {
-      name: formData.name,
+      nome: formData.nome,
       email: formData.email,
-      date_of_birth: formData.date_of_birth,
-      phoneNumber: formData.phoneNumber,
+      telefone: formData.telefone,
+      especialidade: formData.especialidade,
+      endereco: formData.endereco,
+      status: formData.status,
     };
 
     if (editingVolunteer) {
@@ -108,36 +112,33 @@ const Volunteers = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: number) => {
   if (!confirm("Tem certeza que deseja excluir este voluntário?")) return;
     deleteMutation.mutate(id);
   };
 
   const handleEdit = (volunteer: VoluntarioRecord) => {
     setEditingVolunteer(volunteer);
-    
-    // Converter datas ISO para formato YYYY-MM-DD para o input type="date"
-    const formatDateForInput = (dateString: string) => {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0];
-    };
 
     setFormData({
-      name: volunteer.name,
+      nome: volunteer.nome,
       email: volunteer.email,
-      date_of_birth: formatDateForInput(volunteer.date_of_birth),
-      phoneNumber: volunteer.phoneNumber
+      telefone: volunteer.telefone || "",
+      especialidade: volunteer.especialidade || "",
+      endereco: volunteer.endereco || "",
+      status: volunteer.status || "ativo",
     });
     setShowForm(true);
   };
 
   const resetForm = () => {
     setFormData({
-      name: "",
+      nome: "",
       email: "",
-      date_of_birth: "",
-      phoneNumber: "",
+      telefone: "",
+      especialidade: "",
+      endereco: "",
+      status: "ativo",
     });
     setEditingVolunteer(null);
     setShowForm(false);
@@ -148,16 +149,16 @@ const Volunteers = () => {
     yPos += 10;
 
     const tableData = volunteers.map((v) => [
-      v.name,
+      v.nome,
       v.email,
-      v.phoneNumber,
-      new Date(v.date_of_birth).toLocaleDateString("pt-BR"),
-      calculateAge(v.date_of_birth) + " anos",
+      v.telefone || "-",
+      v.especialidade || "-",
+      v.status === "ativo" ? "Ativo" : "Inativo",
     ]);
 
     autoTable(doc, {
       startY: yPos,
-      head: [["Nome", "Email", "Telefone", "Nascimento", "Idade"]],
+      head: [["Nome", "Email", "Telefone", "Especialidade", "Status"]],
       body: tableData,
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
@@ -235,11 +236,11 @@ const Volunteers = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo</Label>
+                      <Label htmlFor="nome">Nome Completo</Label>
                       <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        id="nome"
+                        value={formData.nome}
+                        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                         required
                       />
                     </div>
@@ -257,30 +258,57 @@ const Volunteers = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="date_of_birth">Data de Nascimento</Label>
-                      <Input
-                        id="date_of_birth"
-                        type="date"
-                        value={formData.date_of_birth}
+                      <Label htmlFor="telefone">Telefone</Label>
+                      <MaskedInput
+                        id="telefone"
+                        mask="phone"
+                        value={formData.telefone}
                         onChange={(e) =>
-                          setFormData({ ...formData, date_of_birth: e.target.value })
+                          setFormData({ ...formData, telefone: e.target.value })
                         }
-                        required
+                        placeholder="(11) 99999-9999"
                       />
                     </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Telefone</Label>
-                      <MaskedInput
-                        id="phoneNumber"
-                        mask="phone"
-                        value={formData.phoneNumber}
+                    <div className="space-y-2">
+                      <Label htmlFor="especialidade">Especialidade</Label>
+                      <Input
+                        id="especialidade"
+                        value={formData.especialidade}
                         onChange={(e) =>
-                        setFormData({ ...formData, phoneNumber: e.target.value })
+                          setFormData({ ...formData, especialidade: e.target.value })
                         }
-                        placeholder="(11) 99999-9999"
-                        />
-                  </div>
+                        placeholder="Ex: Educação, Saúde, etc"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="endereco">Endereço</Label>
+                      <Input
+                        id="endereco"
+                        value={formData.endereco}
+                        onChange={(e) =>
+                          setFormData({ ...formData, endereco: e.target.value })
+                        }
+                        placeholder="Rua, número, bairro"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <select
+                        id="status"
+                        className="border rounded p-2 w-full"
+                        value={formData.status}
+                        onChange={(e) =>
+                          setFormData({ ...formData, status: e.target.value })
+                        }
+                        required
+                      >
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="flex gap-2">
@@ -310,19 +338,21 @@ const Volunteers = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h3 className="text-xl font-semibold mb-2">
-                          {volunteer.name}
+                          {volunteer.nome}
                         </h3>
 
                         <div className="space-y-1 text-muted-foreground">
                           <p>📧 {volunteer.email}</p>
-                          <p>📞 {volunteer.phoneNumber}</p>
+                          <p>📞 {volunteer.telefone || "Não informado"}</p>
+                          {volunteer.especialidade && <p>💼 {volunteer.especialidade}</p>}
+                          <p>📍 {volunteer.endereco || "Não informado"}</p>
                           <p>
-                            🎂{" "}
-                            {format(new Date(volunteer.date_of_birth), "dd/MM/yyyy", {
+                            📅 Cadastrado em{" "}
+                            {volunteer.data_inscricao ? format(new Date(volunteer.data_inscricao), "dd/MM/yyyy", {
                               locale: ptBR,
-                            })}{" "}
-                            ({calculateAge(volunteer.date_of_birth)} anos)
+                            }) : "Não informado"}
                           </p>
+                          <p>{volunteer.status === "ativo" ? "🟢 Ativo" : "🔴 Inativo"}</p>
                         </div>
                       </div>
 

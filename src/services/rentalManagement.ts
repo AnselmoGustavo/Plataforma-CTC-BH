@@ -1,54 +1,84 @@
-import api from "./api";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface VeiculoLocacao {
   id: number;
-  nomeParceiro: string;
-  espaco: string;
-  dataEntrada: string;
-  dataSaida?: string | null;
-  numeroVaga: string;
-  tipoVeiculo: string;
-  modelo: string;
-  placa: string;
-  criadoEm?: string;
+  nomeparceiro: string;
+  espaco?: string;
+  dataentrada: string;
+  datasaida?: string;
+  numerovaga?: string;
+  tipoveiculo?: string;
+  modelo?: string;
+  placa?: string;
+  roomname?: string;
+  responsible?: string;
+  purpose?: string;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface VeiculoLocacaoDto {
-  nomeParceiro: string;
-  espaco: string;
-  dataEntrada: string;
-  dataSaida?: string | null;
-  numeroVaga: string;
-  tipoVeiculo: string;
-  modelo: string;
-  placa: string;
+  nomeparceiro: string;
+  espaco?: string;
+  dataentrada: string;
+  datasaida?: string | null;
+  numerovaga?: string;
+  tipoveiculo?: string;
+  modelo?: string;
+  placa?: string;
+  roomname?: string;
+  responsible?: string;
+  purpose?: string;
+  description?: string;
 }
 
 export interface VeiculoLocacaoFilters {
-  status?: "active" | "inactive" | "all";
+  status?: "disponivel" | "alugado" | "manutencao" | "all";
   search?: string;
-  vehicleType?: string;
 }
 
-export async function listVeiculosLocacao(filters?: VeiculoLocacaoFilters) {
-  const params = new URLSearchParams();
-  if (filters?.status) params.append("status", filters.status);
-  if (filters?.search) params.append("search", filters.search);
-  if (filters?.vehicleType) params.append("vehicleType", filters.vehicleType);
+export async function listVeiculosLocacao(filters?: VeiculoLocacaoFilters): Promise<VeiculoLocacao[]> {
+  let query = supabase
+    .from('veiculos_locacao')
+    .select('*')
+    .order('dataentrada', { ascending: false });
+
+  if (filters?.search) {
+    query = query.or(`nomeparceiro.ilike.%${filters.search}%,placa.ilike.%${filters.search}%`);
+  }
+
+  const { data, error } = await query;
   
-  const { data } = await api.get<VeiculoLocacao[]>(`/api/VeiculosLocacao?${params.toString()}`);
-  return data;
+  if (error) throw error;
+  return (data as VeiculoLocacao[]) || [];
 }
 
-export async function createVeiculoLocacao(payload: VeiculoLocacaoDto) {
-  const { data } = await api.post<VeiculoLocacao>("/api/VeiculosLocacao", payload);
-  return data;
+export async function createVeiculoLocacao(payload: VeiculoLocacaoDto): Promise<VeiculoLocacao> {
+  const { data, error } = await supabase
+    .from('veiculos_locacao')
+    .insert([payload])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data as VeiculoLocacao;
 }
 
-export async function updateVeiculoLocacao(id: number, payload: VeiculoLocacaoDto) {
-  await api.put(`/api/VeiculosLocacao/${id}`, payload);
+export async function updateVeiculoLocacao(id: number, payload: Partial<VeiculoLocacaoDto>) {
+  const { error } = await supabase
+    .from('veiculos_locacao')
+    .update(payload)
+    .eq('id', id);
+  
+  if (error) throw error;
 }
 
 export async function deleteVeiculoLocacao(id: number) {
-  await api.delete(`/api/VeiculosLocacao/${id}`);
+  const { error } = await supabase
+    .from('veiculos_locacao')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
 }

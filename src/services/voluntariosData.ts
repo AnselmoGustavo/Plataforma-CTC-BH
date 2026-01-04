@@ -1,39 +1,73 @@
-import api from "./api";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface VoluntarioRecord {
-  id: string;
-  name: string;
+  id: number;
+  nome: string;
   email: string;
-  date_of_birth: string;
-  phoneNumber: string;
+  telefone?: string;
+  especialidade?: string;
+  data_inscricao?: string;
+  status?: string;
+  endereco?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface VoluntarioDto {
-  name: string;
+  nome: string;
   email: string;
-  date_of_birth: string;
-  phoneNumber: string;
+  telefone?: string;
+  especialidade?: string;
+  endereco?: string;
+  status?: string;
 }
 
-export async function listVoluntarios() {
-  const { data } = await api.get<VoluntarioRecord[]>("/api/Voluntarios");
-  return data;
+export async function listVoluntarios(): Promise<VoluntarioRecord[]> {
+  const { data, error } = await supabase
+    .from('voluntarios')
+    .select('*')
+    .order('nome');
+  
+  if (error) throw error;
+  return (data as VoluntarioRecord[]) || [];
 }
 
-export async function getVoluntarioById(id: string) {
-  const { data } = await api.get<VoluntarioRecord>(`/api/Voluntarios/${id}`);
-  return data;
+export async function getVoluntarioById(id: number): Promise<VoluntarioRecord> {
+  const { data, error } = await supabase
+    .from('voluntarios')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) throw error;
+  return data as VoluntarioRecord;
 }
 
-export async function createVoluntario(payload: VoluntarioDto) {
-  const { data } = await api.post<VoluntarioRecord>("/api/Voluntarios", payload);
-  return data;
+export async function createVoluntario(payload: VoluntarioDto): Promise<VoluntarioRecord> {
+  const { data, error } = await supabase
+    .from('voluntarios')
+    .insert([payload])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data as VoluntarioRecord;
 }
 
-export async function updateVoluntario(id: string, payload: VoluntarioDto) {
-  await api.put(`/api/Voluntarios/${id}`, payload);
+export async function updateVoluntario(id: number, payload: Partial<VoluntarioDto>) {
+  const { error } = await supabase
+    .from('voluntarios')
+    .update(payload)
+    .eq('id', id);
+  
+  if (error) throw error;
 }
 
-export async function deleteVoluntario(id: string) {
-  await api.delete(`/api/Voluntarios/${id}`);
+export async function deleteVoluntario(id: number) {
+  const { error } = await supabase
+    .from('voluntarios')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
 }

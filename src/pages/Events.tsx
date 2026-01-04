@@ -70,7 +70,7 @@ const Events = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: EventDto }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: EventDto }) =>
       updateEvent(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -97,10 +97,14 @@ const Events = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Combinar data e hora para criar start_date
+    const startDateTime = `${formData.event_date}T${formData.event_time}`;
+    const eventDate = new Date(startDateTime);
+
     const payload: EventDto = {
       title: formData.title,
-      event_date: formData.event_date,
-      event_time: formData.event_time,
+      start_date: eventDate.toISOString(),
+      end_date: eventDate.toISOString(),
       location: formData.location,
       description: formData.description,
     };
@@ -115,7 +119,7 @@ const Events = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: number) => {
     if (!confirm("Tem certeza que deseja excluir este evento?")) return;
     deleteMutation.mutate(id);
   };
@@ -123,19 +127,17 @@ const Events = () => {
   const handleEdit = (event: EventRecord) => {
     setEditingEvent(event);
 
-    // Converter datas ISO para formato YYYY-MM-DD para o input type="date"
-    const formatDateForInput = (dateString: string) => {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      return date.toISOString().split("T")[0];
-    };
+    // Separar data e hora do start_date
+    const startDate = new Date(event.start_date);
+    const dateStr = startDate.toISOString().split('T')[0];
+    const timeStr = startDate.toTimeString().slice(0, 5);
 
     setFormData({
       title: event.title,
-      event_date: formatDateForInput(event.event_date),
-      event_time: event.event_time,
-      location: event.location,
-      description: event.description,
+      event_date: dateStr,
+      event_time: timeStr,
+      location: event.location || "Rua dos Guaranis, 597 - Centro, Belo Horizonte - MG, 30120-040",
+      description: event.description || "",
     });
     setShowForm(true);
   };
@@ -143,7 +145,9 @@ const Events = () => {
   // Filtros
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
-      const eventDate = new Date(event.event_date);
+      if (!event.start_date) return false;
+      
+      const eventDate = new Date(event.start_date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -179,15 +183,15 @@ const Events = () => {
 
     const tableData = filteredEvents.map((e) => [
       e.title,
-      new Date(e.event_date).toLocaleDateString("pt-BR"),
-      e.event_time,
-      e.location,
-      e.description.substring(0, 30) + (e.description.length > 30 ? "..." : ""),
+      e.start_date ? format(new Date(e.start_date), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
+      e.end_date ? format(new Date(e.end_date), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
+      e.location || "-",
+      (e.description || "").substring(0, 30) + ((e.description || "").length > 30 ? "..." : ""),
     ]);
 
     autoTable(doc, {
       startY: yPos,
-      head: [["Evento", "Data", "Hora", "Local", "Descrição"]],
+      head: [["Evento", "Início", "Término", "Local", "Descrição"]],
       body: tableData,
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
@@ -447,10 +451,10 @@ const Events = () => {
                 </p>
               ) : (
                 filteredEvents.map((event) => {
-                  const eventDate = new Date(event.event_date);
+                  const eventStartDate = new Date(event.start_date);
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
-                  const isPast = eventDate < today;
+                  const isPast = eventStartDate < today;
 
                   return (
                     <Card key={event.id} className={isPast ? "opacity-70" : ""}>
@@ -461,32 +465,63 @@ const Events = () => {
                               <h3 className="text-xl font-semibold">
                                 {event.title}
                               </h3>
-                              {isPast && (
-                                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                                  Passado
+                              {event.status === "cancelled" && (
+                                <span className="text-xs bg-red-200 text-red-700 px-2 py-1 rounded">
+                                  Cancelado
                                 </span>
                               )}
-                              {!isPast && (
+                              {event.status === "completed" && (
+                                <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
+                                  Concluído
+                                </span>
+                              )}
+                              {event.status === "ongoing" && (
+                                <span className="text-xs bg-yellow-200 text-yellow-700 px-2 py-1 rounded">
+                                  Em Andamento
+                                </span>
+                              )}
+                              {event.status === "scheduled" && !isPast && (
                                 <span className="text-xs bg-green-200 text-green-700 px-2 py-1 rounded">
-                                  Próximo
+                                  Agendado
+                                </span>
+                              )}
+                              {isPast && event.status === "scheduled" && (
+                                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                  Passado
                                 </span>
                               )}
                             </div>
                             <div className="space-y-1 text-muted-foreground">
                               <p>
-                                📅{" "}
-                                {format(
-                                  new Date(event.event_date),
-                                  "dd 'de' MMMM 'de' yyyy",
-                                  { locale: ptBR }
-                                )}{" "}
-                                às {event.event_time}
+                                📅 Início:{" "}
+                                {event.start_date
+                                  ? format(
+                                      new Date(event.start_date),
+                                      "dd/MM/yyyy 'às' HH:mm",
+                                      { locale: ptBR }
+                                    )
+                                  : "Data não informada"}
                               </p>
-                              <p>📍 {event.location}</p>
-                              <p className="mt-2">
-                                <strong>📋 Descrição: </strong>
-                                {event.description}
+                              <p>
+                                🏁 Término:{" "}
+                                {event.end_date
+                                  ? format(
+                                      new Date(event.end_date),
+                                      "dd/MM/yyyy 'às' HH:mm",
+                                      { locale: ptBR }
+                                    )
+                                  : "Data não informada"}
                               </p>
+                              <p>📍 {event.location || "Local não informado"}</p>
+                              {event.capacity && (
+                                <p>👥 Capacidade: {event.capacity} pessoas</p>
+                              )}
+                              {event.description && (
+                                <p className="mt-2">
+                                  <strong>📋 Descrição: </strong>
+                                  {event.description}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-2">

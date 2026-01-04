@@ -1,41 +1,75 @@
-import api from "./api";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface EventRecord {
-  id: string;
+  id: number;
   title: string;
-  description: string;
-  event_date: string;
-  event_time: string;
-  location: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  location?: string;
+  status?: string;
+  capacity?: number;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface EventDto {
   title: string;
-  description: string;
-  event_date: string;
-  event_time: string;
-  location: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  location?: string;
+  status?: string;
+  capacity?: number;
 }
 
-export async function listEvents() {
-  const { data } = await api.get<EventRecord[]>("/api/Events");
-  return data;
+export async function listEvents(): Promise<EventRecord[]> {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .order('start_date', { ascending: false });
+  
+  if (error) throw error;
+  return (data as EventRecord[]) || [];
 }
 
-export async function getEventById(id: string) {
-  const { data } = await api.get<EventRecord>(`/api/Events/${id}`);
-  return data;
+export async function getEventById(id: number): Promise<EventRecord> {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) throw error;
+  return data as EventRecord;
 }
 
-export async function createEvent(payload: EventDto) {
-  const { data } = await api.post<EventRecord>("/api/Events", payload);
-  return data;
+export async function createEvent(payload: EventDto): Promise<EventRecord> {
+  const { data, error } = await supabase
+    .from('events')
+    .insert([payload])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data as EventRecord;
 }
 
-export async function updateEvent(id: string, payload: EventDto) {
-  await api.put(`/api/Events/${id}`, payload);
+export async function updateEvent(id: number, payload: Partial<EventDto>) {
+  const { error } = await supabase
+    .from('events')
+    .update(payload)
+    .eq('id', id);
+  
+  if (error) throw error;
 }
 
-export async function deleteEvent(id: string) {
-  await api.delete(`/api/Events/${id}`);
+export async function deleteEvent(id: number) {
+  const { error } = await supabase
+    .from('events')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
 }

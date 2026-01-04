@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
-import { getProfile as apiGetProfile, login as apiLogin } from "@/services/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type User = { id: number; email: string; name?: string } | null;
+type User = { id: string; email: string; name?: string } | null;
 
 type AuthContextType = {
   user: User;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,19 +20,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchProfile = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const data = await apiGetProfile();
-      setUser({ id: data.id, email: data.email, name: data.name });
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        setUser({ 
+          id: session.user.id, 
+          email: session.user.email || '', 
+          name: session.user.user_metadata?.name 
+        });
+      } else {
+        setUser(null);
+      }
     } catch (err: unknown) {
       console.error("Failed to fetch profile", err);
-      localStorage.removeItem("token");
       setUser(null);
     } finally {
       setLoading(false);
@@ -40,6 +42,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     fetchProfile();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({ 
+          id: session.user.id, 
+          email: session.user.email || '', 
+          name: session.user.user_metadata?.name 
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -95,56 +114,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const data = await apiLogin(email, password);
-      if (!data || !data.token) {
-        throw new Error("Token não recebido do servidor");
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        setUser({ 
+          id: data.user.id, 
+          email: data.user.email || '', 
+          name: data.user.user_metadata?.name 
+        });
+        toast.success("Login realizado com sucesso!");
       }
-      
-      const token = data.token;
-      localStorage.setItem("token", token);
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      try {
-        const profileData = await apiGetProfile();
-        if (profileData && profileData.id) {
-          setUser({ id: profileData.id, email: profileData.email, name: profileData.name });
-          setLoading(false);
-          toast.success("Login realizado com sucesso!");
-        } else {
-          throw new Error("Dados do perfil inválidos");
-        }
-      } catch (profileErr: unknown) {
-        console.error("Failed to fetch profile after login", profileErr);
-        localStorage.removeItem("token");
-        setUser(null);
-        setLoading(false);
-        const error = profileErr as { response?: { data?: { message?: string } }; message?: string };
-        toast.error(error?.response?.data?.message || error?.message || "Erro ao carregar perfil do usuário");
-        throw profileErr;
-      }
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      const errorMessage = error?.response?.data?.message || error?.message || "Erro ao fazer login";
+    } catch (err: any) {
+      const errorMessage = err?.message || "Erro ao fazer login";
       console.error("Login error:", errorMessage, err);
       toast.error(errorMessage);
-      setLoading(false);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const logout = () => {
+  const signUp = async (email: string, password: string, name?: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name || '',
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        setUser({ 
+          id: data.user.id, 
+          email: data.user.email || '', 
+          name: data.user.user_metadata?.name 
+        });
+      }
+
+      toast.success("Cadastro realizado! Verifique seu email para confirmar.");
+    } catch (err: any) {
+      const errorMessage = err?.message || "Erro ao criar conta";
+      console.error("SignUp error:", errorMessage, err);
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
       inactivityTimerRef.current = null;
     }
-    localStorage.removeItem("token");
+    
+    await supabase.auth.signOut();
     setUser(null);
     toast.success("Logout realizado com sucesso!");
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, signUp }}>
       {children}
     </AuthContext.Provider>
   );

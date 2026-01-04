@@ -56,8 +56,8 @@ const FinancialReport = () => {
                 id: r.id,
                 type: "income",
                 description: r.entrada,
-                amount: Number(r.valorEntrada || 0),
-                date: (r.dataEntrada || "").toString().substring(0, 10),
+                amount: Number(r.valorentrada || 0),
+                date: (r.dataentrada || "").toString().substring(0, 10),
               });
             }
             if (r.despesa) {
@@ -65,8 +65,8 @@ const FinancialReport = () => {
                 id: r.id,
                 type: "expense",
                 description: r.despesa,
-                amount: Number(r.valorDespesa || 0),
-                date: (r.dataDespesa || "").toString().substring(0, 10),
+                amount: Number(r.valordespesa || 0),
+                date: (r.datadespesa || "").toString().substring(0, 10),
               });
             }
             return arr;
@@ -91,25 +91,26 @@ const FinancialReport = () => {
     }
     const payload = {
       entrada: incomeForm.description,
-      dataEntrada: incomeForm.date,
-      valorEntrada: parseFloat(incomeForm.amount),
-      despesa: null,
-      dataDespesa: null,
-      valorDespesa: null,
+      dataentrada: incomeForm.date,
+      valorentrada: parseFloat(incomeForm.amount),
     };
+    console.log("Payload receita:", payload);
     createFinancialReport(payload)
       .then(async () => {
         toast.success("Receita adicionada");
         const data = await listFinancialReports();
         const mapped: FinancialEntry[] = data.flatMap((r) => {
           const arr: FinancialEntry[] = [];
-          if (r.entrada) arr.push({ id: r.id, type: "income", description: r.entrada!, amount: Number(r.valorEntrada || 0), date: (r.dataEntrada || "").toString().substring(0, 10) });
-          if (r.despesa) arr.push({ id: r.id, type: "expense", description: r.despesa!, amount: Number(r.valorDespesa || 0), date: (r.dataDespesa || "").toString().substring(0, 10) });
+          if (r.entrada) arr.push({ id: r.id, type: "income", description: r.entrada!, amount: Number(r.valorentrada || 0), date: (r.dataentrada || "").toString().substring(0, 10) });
+          if (r.despesa) arr.push({ id: r.id, type: "expense", description: r.despesa!, amount: Number(r.valordespesa || 0), date: (r.datadespesa || "").toString().substring(0, 10) });
           return arr;
         });
         setEntries(mapped);
       })
-      .catch(() => toast.error("Erro ao salvar receita"));
+      .catch((error) => {
+        console.error("Erro ao salvar receita:", error);
+        toast.error("Erro ao salvar receita");
+      });
     setIncomeForm({ description: "", amount: "", date: "" });
     setShowIncomeForm(false);
   };
@@ -120,26 +121,27 @@ const FinancialReport = () => {
       return;
     }
     const payload = {
-      entrada: null,
-      dataEntrada: null,
-      valorEntrada: null,
       despesa: expenseForm.description,
-      dataDespesa: expenseForm.date,
-      valorDespesa: parseFloat(expenseForm.amount),
+      datadespesa: expenseForm.date,
+      valordespesa: parseFloat(expenseForm.amount),
     };
+    console.log("Payload despesa:", payload);
     createFinancialReport(payload)
       .then(async () => {
         toast.success("Despesa adicionada");
         const data = await listFinancialReports();
         const mapped: FinancialEntry[] = data.flatMap((r) => {
           const arr: FinancialEntry[] = [];
-          if (r.entrada) arr.push({ id: r.id, type: "income", description: r.entrada!, amount: Number(r.valorEntrada || 0), date: (r.dataEntrada || "").toString().substring(0, 10) });
-          if (r.despesa) arr.push({ id: r.id, type: "expense", description: r.despesa!, amount: Number(r.valorDespesa || 0), date: (r.dataDespesa || "").toString().substring(0, 10) });
+          if (r.entrada) arr.push({ id: r.id, type: "income", description: r.entrada!, amount: Number(r.valorentrada || 0), date: (r.dataentrada || "").toString().substring(0, 10) });
+          if (r.despesa) arr.push({ id: r.id, type: "expense", description: r.despesa!, amount: Number(r.valordespesa || 0), date: (r.datadespesa || "").toString().substring(0, 10) });
           return arr;
         });
         setEntries(mapped);
       })
-      .catch(() => toast.error("Erro ao salvar despesa"));
+      .catch((error) => {
+        console.error("Erro ao salvar despesa:", error);
+        toast.error("Erro ao salvar despesa");
+      });
     setExpenseForm({ description: "", amount: "", date: "" });
     setShowExpenseForm(false);
   };
@@ -150,8 +152,8 @@ const FinancialReport = () => {
         const data = await listFinancialReports();
         const mapped: FinancialEntry[] = data.flatMap((r) => {
           const arr: FinancialEntry[] = [];
-          if (r.entrada) arr.push({ id: r.id, type: "income", description: r.entrada!, amount: Number(r.valorEntrada || 0), date: (r.dataEntrada || "").toString().substring(0, 10) });
-          if (r.despesa) arr.push({ id: r.id, type: "expense", description: r.despesa!, amount: Number(r.valorDespesa || 0), date: (r.dataDespesa || "").toString().substring(0, 10) });
+          if (r.entrada) arr.push({ id: r.id, type: "income", description: r.entrada!, amount: Number(r.valorentrada || 0), date: (r.dataentrada || "").toString().substring(0, 10) });
+          if (r.despesa) arr.push({ id: r.id, type: "expense", description: r.despesa!, amount: Number(r.valordespesa || 0), date: (r.datadespesa || "").toString().substring(0, 10) });
           return arr;
         });
         setEntries(mapped);
