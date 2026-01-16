@@ -178,10 +178,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearTimeout(inactivityTimerRef.current);
       inactivityTimerRef.current = null;
     }
-    
-    await supabase.auth.signOut();
-    setUser(null);
-    toast.success("Logout realizado com sucesso!");
+
+    try {
+      // Usa o client do Supabase para incluir apikey + bearer automaticamente
+      const { error } = await supabase.auth.signOut({ scope: "global" });
+      if (error) throw error;
+
+      localStorage.removeItem("token");
+      setUser(null);
+      toast.success("Logout realizado com sucesso!");
+    } catch (err: any) {
+      console.error("Logout error:", err?.message || err);
+      toast.error(err?.message || "Erro ao fazer logout");
+      throw err;
+    }
   };
 
   return (

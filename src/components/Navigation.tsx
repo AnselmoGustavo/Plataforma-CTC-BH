@@ -37,11 +37,14 @@ const Navigation = () => {
     setIsMenuOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // clear dev-only local flag
     localStorage.removeItem("fake_admin");
-    logout();
-    navigate("/");
+    try {
+      await logout();
+    } finally {
+      navigate("/");
+    }
   };
 
   return (
